@@ -82,9 +82,10 @@ class Parakeet:
                 if c.visits > max_visits.visits / 2 and c.move != bestmove:
                     data_boards.append(c.board)
             for b in data_boards:
-                board_list.append(fast_board_to_boardmap(b))
-                value = stockfish_analyse(b)
-                eval_list.append(value)
+                if (b.fullmove_number > 5) and not lt5(b):
+                    board_list.append(fast_board_to_boardmap(b))
+                    value = stockfish_analyse(b)
+                    eval_list.append(value)
             return bestmove, board_list, eval_list
 
         return bestmove
