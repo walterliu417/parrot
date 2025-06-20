@@ -9,3 +9,5 @@ whiteboard.py
 *.pgn
 config.json
 engines/
+auth/
+token.json

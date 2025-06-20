@@ -13,7 +13,7 @@ class Parakeet:
         sess_options = onnxruntime.SessionOptions()
         sess_options.intra_op_num_threads = helperfuncs.num_cores
         self.model = onnxruntime.InferenceSession(helperfuncs.model_path, sess_options, providers=[helperfuncs.provider])
-        print("Current best model loaded successfully!")
+        if helperfuncs.log: print("Current best model loaded successfully!")
 
     def set_fen(self, fen):
         self.board = chess.Board(fen)
@@ -63,14 +63,30 @@ class Parakeet:
         movelist = []
         bestmove = child.move
         cp = nn_to_cp(self.root_node.value)
+        if helperfuncs.datagen: data_boards = [self.root_node.board]
         while (child.children != []) and not child.terminal:
+            if helperfuncs.datagen: data_boards.append(child.board)
             movelist.append(child.move.uci())
             child = min(child.children, key=lambda c: c.value)
         nps = helperfuncs.nodes / self.time_for_this_move
         if len(movelist) != 0:
-            print(f"info depth 1 seldepth {len(movelist)} time {int((time.time() - start) * 1000)} nodes {helperfuncs.nodes} score cp {int(cp * 100)} nps {int(nps)} pv {' '.join(movelist)}")
+            if helperfuncs.log: print(f"info depth 1 seldepth {len(movelist)} time {int((time.time() - start) * 1000)} nodes {helperfuncs.nodes} score cp {int(cp * 100)} nps {int(nps)} pv {' '.join(movelist)}")
         else:
-            print(f"info depth 1 seldepth 1 time {int((time.time() - start) * 1000)} nodes {helperfuncs.nodes} score cp {int(cp * 100)} nps {int(nps)} pv {bestmove}")
+            if helperfuncs.log: print(f"info depth 1 seldepth 1 time {int((time.time() - start) * 1000)} nodes {helperfuncs.nodes} score cp {int(cp * 100)} nps {int(nps)} pv {bestmove}")
+
+        if helperfuncs.datagen:
+            board_list = []
+            eval_list = []
+            max_visits = max(self.root_node.children, key=lambda c: c.visits)
+            for c in self.root_node.children:
+                if c.visits > max_visits.visits / 2 and c.move != bestmove:
+                    data_boards.append(c.board)
+            for b in data_boards:
+                board_list.append(fast_board_to_boardmap(b))
+                value = stockfish_analyse(b)
+                eval_list.append(value)
+            return bestmove, board_list, eval_list
+
         return bestmove
 
 
@@ -81,7 +97,7 @@ def run():
             continue
         command = command.split()        
         if command[0] == "uci":
-            print("id name Parrot v1.1")
+            print("id name Parakeet v1.2")
             print("id author Walter Liu")
             print("option name explore_factor type spin default 20 min 0 max 200")
             print("option name capture_bonus type spin default 350 min 0 max 500")
@@ -91,6 +107,10 @@ def run():
             print("option name net_path type string default parakeet.onnx")
             print("option name gpu_enabled type check default true")
             print("option name num_threads type spin default 1 min 0 max 64")
+            print("option name temperature type spin default 0 min 0 max 100")
+            print("option name temp_moves type spin default 5 min 0 max 100")
+            print("option name datagen type check default false")
+            print("option name log type check default true")
             print("uciok")
         elif command[0] == "isready":
             print("readyok")
@@ -126,7 +146,7 @@ def run():
             if len(command) > 5 and command[5] == "btime":
                 btime = float(command[6]) / 1000.0
 
-            print(f"bestmove {engine.search(movetime, wtime, btime)}")
+            if helperfuncs.log: print(f"bestmove {engine.search(movetime, wtime, btime)}")
         elif command[0] == "setoption":
             name = command[2]
             if name == "explore_factor":
@@ -152,6 +172,20 @@ def run():
                     helperfuncs.provider = "CPUExecutionProvider"
             elif name == "num_threads":
                 helperfuncs.num_cores = int(command[4])
+            elif name == "temperature":
+                helperfuncs.temperature = int(command[4])
+            elif name == "temp_moves":
+                helperfuncs.temp_moves = int(command[4])
+            elif name == "datagen":
+                if command[4] == "true":
+                    helperfuncs.datagen = True
+                elif command[4] == "false":
+                    helperfuncs.datagen = False
+            elif name == "log":
+                if command[4] == "true":
+                    helperfuncs.log = True
+                elif command[4] == "false":
+                    helperfuncs.log = False
 
 if __name__ == "__main__":
     run()

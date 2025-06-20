@@ -1,9 +1,12 @@
 import time
 import chess
 import chess.syzygy
+import chess.engine
 import numpy as np
 import random
 import onnxruntime
+import math
+import sys
 
 # Global variables
 nodes = 0
@@ -11,10 +14,19 @@ factor = 0.2
 decay = 1
 quiescent = 0.35
 check = 0.1
+temperature = 0
+temp_moves = 5
 model_path = "parakeet.onnx" # Around 5x speedup on GPU.
 broken = False
 provider = "CUDAExecutionProvider" # default: gpu enabled.
 num_cores = 1
+datagen = False
+log = True
+
+if sys.platform == "win32":
+    teacher = chess.engine.SimpleEngine.popen_uci("engines/stockfish-windows/stockfish-windows-x86-64-avx2.exe")
+elif sys.platform == "linux":
+    teacher = chess.engine.SimpleEngine.popen_uci("engines/stockfish-linux/stockfish-ubuntu-x86-64-avx2")
 
 # Look for Syzygy tablebase
 try:
@@ -115,3 +127,21 @@ def lt5(board):
     p += len(board.pieces(chess.QUEEN, chess.WHITE))
     p += len(board.pieces(chess.QUEEN, chess.BLACK))
     return p <= 3
+
+def cp_to_win_prob(cp):
+    return 0.4 * (1 - math.exp(-cp / 200)) / (1 + math.exp(-cp / 200)) + 0.5
+
+def mate_to_win_prob(mate):
+    if mate < 0:
+        return min(0.1, 0.1 + (abs(mate) - 21)/200)
+    else:
+        return max(0.9, 0.9 + (21 - mate)/200)
+    
+def stockfish_analyse(board, time=0.5):
+    info = teacher.analyse(board, chess.engine.Limit(time=time))["score"]
+    score = info.relative
+    try:
+        value = cp_to_win_prob(score.cp)
+    except:
+        value = mate_to_win_prob(score.moves)
+    return value

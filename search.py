@@ -126,14 +126,17 @@ class Node:
                     helperfuncs.broken = True
 
         for i in range(len(not_evaled)):
-            not_evaled[i].value = float(result[i])
+            if not_evaled[i].board.fullmove_number <= helperfuncs.temp_moves:
+                not_evaled[i].value = float(result[i]) * (1 + random.random() * helperfuncs.temperature / 100)
+            else:
+                not_evaled[i].value = float(result[i])
             evaled.append(not_evaled[i])
 
         self.children = evaled
 
 
     def pns(self, start_time, time_for_this_move) -> Node:
-        print(f"info string explore_factor {helperfuncs.factor} capture_bonus {helperfuncs.quiescent} check_bonus {helperfuncs.check} explore_decay {helperfuncs.decay}")
+        if helperfuncs.log: print(f"info string explore_factor {helperfuncs.factor} capture_bonus {helperfuncs.quiescent} check_bonus {helperfuncs.check} explore_decay {helperfuncs.decay}")
         while time.time() - start_time < time_for_this_move:
             # 1. Traverse tree with UCT + quiescence and decreasing exploration with time.
             target_node = self
@@ -172,7 +175,7 @@ class Node:
         # 4. Select move - UBFMS
         max_visits = max(self.children, key=lambda child: child.visits)
         selected_child = min(self.children, key=lambda child: child.value)
-        print(f"info string root_visits {self.visits} max_visits {max_visits.visits} best_visits {selected_child.visits}")
+        if helperfuncs.log: print(f"info string root_visits {self.visits} max_visits {max_visits.visits} best_visits {selected_child.visits}")
         options = []
         for child in self.children:
             if child.visits == max_visits.visits:

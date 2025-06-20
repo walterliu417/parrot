@@ -8,5 +8,9 @@ tablebase_dir - Path to 5-piece Syzygy tablebases.\
 net_path - Path to the neural network, stored as an Open Neural Network Exchange (ONNX) file.\
 gpu_enabled - Set to true if GPU acceleration is available, otherwise false.\
 num_threads - Number of threads to use - default is 1. If the user wishes to use the maximum number of threads, set this option to 0.\
+temperature - Randomly perturbs the evaluation up to the percentage set by this parameter.\
+temp_moves - Number of full moves to apply temperature pertubation to.\
+datagen - Set datagen mode.\
+log - Toggles console logging.
 \
 See technical.md for explanations on the search algorithm.
