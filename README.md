@@ -5,7 +5,7 @@ A list of UCI options can be found in uci_options.md in the docs folder.\
 For technical documentation on the engine, see technical.md in the docs folder.
 
 **Usage**\
-In the Colab Notebooks folder, use parrot_implementation.ipynb to run as a Lichess bot, and parrot_tuning.ipynb to run games on fastchess.
+In the Colab Notebooks folder, use parakeet_implementation.ipynb to run as a Lichess bot, and parakeet_tuning.ipynb to run games on fastchess.
 Parakeet uses the UCI protocol.
 
 **Building from source**\
@@ -59,3 +59,4 @@ pyinstaller --onefile parakeet.py
 - SOAP: Improving and Stabilising Shampoo using Adam. https://arxiv.org/abs/2409.11321
 - Lichess Evaluation and Puzzle Databases.
 - Fastchess, for testing the engine and tuning hyperparameters.
+- ChatGPT, for basically giving me a crash course on supervised learning and acting as a platform to bounce ideas off of.
