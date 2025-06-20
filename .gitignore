@@ -11,3 +11,4 @@ config.json
 engines/
 auth/
 token.json
+tablebase_5pc/

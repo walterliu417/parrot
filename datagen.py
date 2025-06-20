@@ -55,6 +55,10 @@ def datagen(worker):
             upload_file_to_drive(filen)
             os.remove(filen)
             print(f"Uploaded file {filen}")
+        board.push(move)
+        if lt5(board) or board.is_game_over(claim_draw=True):
+            board = chess.Board()
+            print(f"Starting new game at worker {worker}")
 
 
 
