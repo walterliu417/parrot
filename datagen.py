@@ -50,6 +50,7 @@ def datagen(worker):
         print(f"{len(evallist)} from worker {worker} currently in storage")
         if len(evallist) > 4096:
             filen = f"selfplay1_{worker}_{upload_count}.chess"
+            upload_count += 1
             pickle.dump([boardlist[:4096], evallist[:4096]], open(filen, "wb"))
             boardlist, evallist = [], []
             upload_file_to_drive(filen)
