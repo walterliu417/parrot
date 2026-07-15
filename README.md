@@ -27,7 +27,7 @@ venv/Scripts/activate.bat
 ```
 Install required libraries:
 ```
-pip install numpy chess
+pip install numpy<2.4.0 chess
 ```
 On a GPU-enabled environment:
 ```
