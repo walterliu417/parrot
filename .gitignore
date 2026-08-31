@@ -12,3 +12,5 @@ engines/
 auth/
 token.json
 tablebase_5pc/
+deploy_venv/
+old_onnx/

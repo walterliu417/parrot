@@ -62,12 +62,46 @@ class Parakeet:
 
         movelist = []
         bestmove = child.move
-        cp = nn_to_cp(self.root_node.value)
+        display_value = self.root_node.value
+
+        cp = nn_to_cp(display_value)
         if helperfuncs.datagen: data_boards = [self.root_node.board]
-        while (child.children != []) and not child.terminal:
-            if helperfuncs.datagen: data_boards.append(child.board)
+
+        # debug
+        print("root stats:")
+        print("current position", self.root_node.value)
+        print("side to move", self.root_node.board.turn)
+        print("child, visits, value, minimax value:")
+        for c in self.root_node.children:
+            print(c.move, c.visits, c.value, c.minimax_value)
+        print("_______________")
+        print("pv stats:")
+        print("move, visits, value, minimax value:")
+        while child.children and not child.terminal:
+            if helperfuncs.datagen:
+                data_boards.append(child.board)
+
             movelist.append(child.move.uci())
-            child = min(child.children, key=lambda c: c.value)
+            print(child.move.uci(), child.visits, child.value, child.minimax_value)
+
+            max_visits = max(c.visits for c in child.children)
+            candidates = [
+                c for c in child.children
+                if c.visits == max_visits
+            ]
+
+            if child.board.turn == chess.WHITE:
+                value_best = max(child.children, key=lambda c: c.value)
+                if value_best.value > 0.75 and value_best.visits > 10:
+                    child = value_best
+                else:
+                    child = max(candidates, key=lambda c: c.value)
+            else:
+                value_best = min(child.children, key=lambda c: c.value)
+                if value_best.value < 0.25 and value_best.visits > 10:
+                    child = value_best
+                else:
+                    child = min(candidates, key=lambda c: c.value)
         nps = helperfuncs.nodes / self.time_for_this_move
         if len(movelist) != 0:
             if helperfuncs.log: print(f"info depth 1 seldepth {len(movelist)} time {int((time.time() - start) * 1000)} nodes {helperfuncs.nodes} score cp {int(cp * 100)} nps {int(nps)} pv {' '.join(movelist)}")
@@ -101,7 +135,7 @@ def run():
             print("id name Parakeet v1.2")
             print("id author Walter Liu")
             print("option name explore_factor type spin default 20 min 0 max 200")
-            print("option name capture_bonus type spin default 350 min 0 max 500")
+            print("option name capture_bonus type spin default 0 min 0 max 500")
             print("option name check_bonus type spin default 100 min 0 max 500")
             print("option name explore_decay type spin default 100 min 0 max 500")
             print("option name tablebase_dir type string default /content/drive/MyDrive/parakeet/tablebase_5pc")
